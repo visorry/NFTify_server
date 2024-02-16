@@ -2,16 +2,25 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const path = require('path');
-
 const NFT = require('../models/nftModel');
 const auth = require('../middlewares/authMiddleware');
-const upload = multer({ dest: 'uploads' });
 const User = require('../models/userModel')
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './routes/uploads');
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
+
 router.post('/nfts', auth, upload.single('picture'), async (req, res) => {
   try {
     const nft = new NFT({
       ...req.body,
-      picture: req.file.filename,
+      picture: req.file.originalname, // Use the original filename with extension
       creator: req.userId,
     });
 
@@ -67,7 +76,7 @@ router.get('/nfts/:id', auth, async (req, res) => {
   }
 });
 
-router.patch('/nfts/:id', auth, async (req, res) => {
+router.patch('/nfts/:id', auth, upload.single('picture'), async (req, res) => {
   try {
     const nft = await NFT.findById(req.params.id);
 
@@ -78,17 +87,25 @@ router.patch('/nfts/:id', auth, async (req, res) => {
     const user = await User.findById(req.userId);
 
     // Check if the user is the creator
-    if (!user || (nft.creator.toString() !== req.userId)) {
+    if (!user || nft.creator.toString() !== req.userId) {
       return res.status(403).json({ message: 'Permission denied' });
     }
 
-    const updatedNFT = await NFT.findByIdAndUpdate(req.params.id, req.body);
-
-    if (!updatedNFT) {
-      return res.status(404).json({ message: 'NFT not found' });
+    // If a new picture file is provided, update the picture field
+    if (req.file) {
+      nft.picture = req.file.originalname;
     }
-    const newNFT = await NFT.findById(req.params.id);
-    res.json(newNFT);
+
+    // Update other fields if needed
+    nft.itemTitle = req.body.itemTitle || nft.itemTitle;
+    nft.description = req.body.description || nft.description;
+    nft.price = req.body.price || nft.price;
+    nft.royalties = req.body.royalties || nft.royalties;
+
+    // Save the updated NFT
+    const updatedNFT = await nft.save();
+
+    res.json(updatedNFT);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
