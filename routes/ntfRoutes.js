@@ -24,8 +24,13 @@ router.get('/uploads/:filename', (req, res) => {
   const filename = req.params.filename;
   const imagePath = path.join(__dirname, 'uploads', filename + '.jpg'); // Assuming ".jpg" extension
 
+  // Set content type to image/jpeg
+  res.type('image/jpeg');
+
+  // Send the file
   res.sendFile(imagePath);
 });
+
 
 router.get('/my-nfts', auth, async (req, res) => {
   try {
