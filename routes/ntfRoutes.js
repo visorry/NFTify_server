@@ -1,6 +1,8 @@
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
+const path = require('path');
+
 const NFT = require('../models/nftModel');
 const auth = require('../middlewares/authMiddleware');
 const upload = multer({ dest: 'uploads' });
