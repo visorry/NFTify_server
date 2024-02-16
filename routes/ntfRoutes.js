@@ -20,17 +20,18 @@ router.post('/nfts', auth, upload.single('picture'), async (req, res) => {
   }
 });
 
+router.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Route to serve images with proper extension and content type
 router.get('/uploads/:filename', (req, res) => {
   const filename = req.params.filename;
-  const imagePath = path.join(__dirname, 'uploads', filename + '.jpg'); // Assuming ".jpg" extension
 
   // Set content type to image/jpeg
   res.type('image/jpeg');
 
   // Send the file
-  res.sendFile(imagePath);
+  res.sendFile(path.join(__dirname, 'uploads', filename + '.jpg'));
 });
-
 
 router.get('/my-nfts', auth, async (req, res) => {
   try {
