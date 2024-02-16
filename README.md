@@ -7,4 +7,4 @@
 
 ## API Documentation
 
-Access the API documentation [here](http://localhost:3000/api-docs).
+Access the API documentation [here](http://nftifyserver-production.up.railway.app/api-docs).
