@@ -16,6 +16,42 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+/**
+ * @swagger
+ * tags:
+ *   name: NFTs
+ *   description: Operations related to NFTs
+ */
+
+/**
+ * @swagger
+ * /nfts:
+ *   post:
+ *     summary: Create a new NFT
+ *     tags: [NFTs]
+ *     security:
+ *       - BearerAuth: []
+ *     consumes:
+ *       - multipart/form-data
+ *     parameters:
+ *       - in: formData
+ *         name: picture
+ *         type: file
+ *         description: The picture file for the NFT
+ *       - in: body
+ *         name: body
+ *         description: NFT data
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/NFT'
+ *     responses:
+ *       201:
+ *         description: NFT created successfully
+ *         schema:
+ *           $ref: '#/definitions/NFT'
+ *       400:
+ *         description: Bad request, check your request body
+ */
 router.post('/nfts', auth, upload.single('picture'), async (req, res) => {
   try {
     const nft = new NFT({
@@ -33,6 +69,24 @@ router.post('/nfts', auth, upload.single('picture'), async (req, res) => {
 
 router.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+/**
+ * @swagger
+ * /uploads/{filename}:
+ *   get:
+ *     summary: Get the image associated with an NFT
+ *     tags: [NFTs]
+ *     parameters:
+ *       - in: path
+ *         name: filename
+ *         type: string
+ *         required: true
+ *         description: The filename of the image
+ *     responses:
+ *       200:
+ *         description: The image file
+ *       500:
+ *         description: Internal server error
+ */
 // Route to serve images with proper extension and content type
 router.get('/uploads/:filename', (req, res) => {
   const filename = req.params.filename;
@@ -44,6 +98,24 @@ router.get('/uploads/:filename', (req, res) => {
   res.sendFile(path.join(__dirname, 'uploads', filename + '.jpg'));
 });
 
+/**
+ * @swagger
+ * /my-nfts:
+ *   get:
+ *     summary: Get NFTs created by the authenticated user
+ *     tags: [NFTs]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: An array of NFTs created by the user
+ *         schema:
+ *           type: array
+ *           items:
+ *             $ref: '#/definitions/NFT'
+ *       500:
+ *         description: Internal server error
+ */
 router.get('/my-nfts', auth, async (req, res) => {
   try {
     const userNFTs = await NFT.find({ creator: req.userId });
@@ -54,6 +126,24 @@ router.get('/my-nfts', auth, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+/**
+ * @swagger
+ * /nfts:
+ *   get:
+ *     summary: Get all NFTs
+ *     tags: [NFTs]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: An array of NFTs
+ *         schema:
+ *           type: array
+ *           items:
+ *             $ref: '#/definitions/NFT'
+ *       500:
+ *         description: Internal server error
+ */
 
 router.get('/nfts', auth, async (req, res) => {
   try {
@@ -63,6 +153,32 @@ router.get('/nfts', auth, async (req, res) => {
     res.status(500).send(error);
   }
 });
+
+
+/**
+ * @swagger
+ * /nfts/{id}:
+ *   get:
+ *     summary: Get a specific NFT by ID
+ *     tags: [NFTs]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         type: string
+ *         required: true
+ *         description: The ID of the NFT to retrieve
+ *     responses:
+ *       200:
+ *         description: The requested NFT
+ *         schema:
+ *           $ref: '#/definitions/NFT'
+ *       404:
+ *         description: NFT not found
+ *       500:
+ *         description: Internal server error
+ */
 
 router.get('/nfts/:id', auth, async (req, res) => {
   try {
@@ -76,6 +192,44 @@ router.get('/nfts/:id', auth, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /nfts/{id}:
+ *   patch:
+ *     summary: Update a specific NFT by ID
+ *     tags: [NFTs]
+ *     security:
+ *       - BearerAuth: []
+ *     consumes:
+ *       - multipart/form-data
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         type: string
+ *         required: true
+ *         description: The ID of the NFT to update
+ *       - in: formData
+ *         name: picture
+ *         type: file
+ *         description: The updated picture file for the NFT
+ *       - in: body
+ *         name: body
+ *         description: Updated NFT data
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/NFT'
+ *     responses:
+ *       200:
+ *         description: The updated NFT
+ *         schema:
+ *           $ref: '#/definitions/NFT'
+ *       404:
+ *         description: NFT not found
+ *       403:
+ *         description: Permission denied
+ *       500:
+ *         description: Internal server error
+ */
 router.patch('/nfts/:id', auth, upload.single('picture'), async (req, res) => {
   try {
     const nft = await NFT.findById(req.params.id);
@@ -113,6 +267,32 @@ router.patch('/nfts/:id', auth, upload.single('picture'), async (req, res) => {
 });
 
 // Delete NFT
+/**
+ * @swagger
+ * /nfts/{id}:
+ *   delete:
+ *     summary: Delete a specific NFT by ID
+ *     tags: [NFTs]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         type: string
+ *         required: true
+ *         description: The ID of the NFT to delete
+ *     responses:
+ *       200:
+ *         description: The deleted NFT
+ *         schema:
+ *           $ref: '#/definitions/NFT'
+ *       404:
+ *         description: NFT not found
+ *       403:
+ *         description: Permission denied
+ *       500:
+ *         description: Internal server error
+ */
 router.delete('/nfts/:id', auth, async (req, res) => {
   try {
     const nft = await NFT.findById(req.params.id);
@@ -141,6 +321,25 @@ router.delete('/nfts/:id', auth, async (req, res) => {
   }
 });
 
-
+/**
+ * @swagger
+ * definitions:
+ *   NFT:
+ *     type: object
+ *     properties:
+ *       itemTitle:
+ *         type: string
+ *       description:
+ *         type: string
+ *       price:
+ *         type: number
+ *       royalties:
+ *         type: number
+ *     required:
+ *       - itemTitle
+ *       - description
+ *       - price
+ *       - royalties
+ */
 
 module.exports = router;
