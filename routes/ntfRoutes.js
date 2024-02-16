@@ -9,7 +9,7 @@ router.post('/nfts', auth, upload.single('picture'), async (req, res) => {
   try {
     const nft = new NFT({
       ...req.body,
-      picture: req.file.path,
+      picture: req.file.filename,
       creator: req.userId,
     });
 
@@ -18,6 +18,13 @@ router.post('/nfts', auth, upload.single('picture'), async (req, res) => {
   } catch (error) {
     res.status(400).send(error);
   }
+});
+
+router.get('/uploads/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const imagePath = path.join(__dirname, 'uploads', filename + '.jpg'); // Assuming ".jpg" extension
+
+  res.sendFile(imagePath);
 });
 
 router.get('/my-nfts', auth, async (req, res) => {
